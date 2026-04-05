@@ -95,9 +95,9 @@ input_dict = {
 input_array = np.array([[input_dict[col] for col in model_columns]])
 
 if st.button("Predict", use_container_width=True):
-    prediction  = model.predict(input_array)[0]
     probability = model.predict_proba(input_array)[0][1]
     risk        = round(probability * 100, 1)
+    prediction  = 1 if probability >= 0.40 else 0
 
     st.divider()
     if prediction == 1:
