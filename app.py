@@ -7,104 +7,88 @@ with open('mental_health_model.pkl', 'rb') as f:
 with open('model_columns.pkl', 'rb') as f:
     model_columns = pickle.load(f)
 
-st.set_page_config(page_title="Mental Health Risk Predictor", page_icon="🧠", layout="centered")
+st.set_page_config(page_title="Student Depression Risk Predictor", page_icon="🧠", layout="centered")
 
-st.title("Mental Health Risk Predictor")
-st.markdown("Answer the questions below. This tool predicts whether someone may benefit from seeking mental health treatment.")
+st.title("🧠 Student Depression Risk Predictor")
+st.markdown("Answer the questions below honestly. This tool predicts whether a student may be at risk of depression based on academic, lifestyle, and personal factors.")
 st.divider()
 
-st.subheader("About you")
+st.subheader("Personal Information")
 col1, col2 = st.columns(2)
 with col1:
-    age = st.slider("Age", 18, 75, 30)
+    age    = st.slider("Age", 16, 35, 20)
+    gender = st.selectbox("Gender", ["Male", "Female"])
 with col2:
-    gender = st.selectbox("Gender", ["Male", "Female", "Other"])
+    city       = st.selectbox("City", ["Delhi", "Mumbai", "Bangalore", "Chennai", "Hyderabad", "Kolkata", "Pune", "Other"])
+    profession = st.selectbox("Profession", ["Student", "Working Professional", "Other"])
 
-st.subheader("Your workplace")
+st.subheader("Academic & Work")
 col3, col4 = st.columns(2)
 with col3:
-    self_employed    = st.selectbox("Are you self-employed?", ["No", "Yes"])
-    no_employees     = st.selectbox("Company size", ["1-5", "6-25", "26-100", "100-500", "500-1000", "More than 1000"])
-    remote_work      = st.selectbox("Do you work remotely?", ["No", "Yes"])
-    tech_company     = st.selectbox("Is it a tech company?", ["Yes", "No"])
+    academic_pressure  = st.selectbox("Academic Pressure (1=Low, 5=High)", [1, 2, 3, 4, 5])
+    work_pressure      = st.selectbox("Work Pressure (1=Low, 5=High)", [1, 2, 3, 4, 5])
+    cgpa               = st.slider("CGPA (out of 10)", 0.0, 10.0, 7.0, step=0.1)
 with col4:
-    benefits         = st.selectbox("Mental health benefits?", ["Yes", "No", "Don't know"])
-    care_options     = st.selectbox("Care options available?", ["Yes", "No", "Not sure"])
-    wellness_program = st.selectbox("Wellness program?", ["Yes", "No", "Don't know"])
-    seek_help        = st.selectbox("Employer encourages seeking help?", ["Yes", "No", "Don't know"])
+    study_satisfaction = st.selectbox("Study Satisfaction (1=Low, 5=High)", [1, 2, 3, 4, 5])
+    job_satisfaction   = st.selectbox("Job Satisfaction (1=Low, 5=High)", [1, 2, 3, 4, 5])
+    work_study_hours   = st.slider("Work/Study Hours per day", 0, 16, 6)
+    degree             = st.selectbox("Degree", ["B.Tech", "MBA", "M.Tech", "BCA", "MCA", "B.Sc", "M.Sc", "Other"])
 
-st.subheader("Mental health history and perceptions")
+st.subheader("Lifestyle & Mental Health")
 col5, col6 = st.columns(2)
 with col5:
-    family_history            = st.selectbox("Family history of mental illness?", ["No", "Yes"])
-    work_interfere            = st.selectbox("Does mental health interfere with work?", ["Never", "Rarely", "Sometimes", "Often"])
-    anonymity                 = st.selectbox("Is anonymity protected?", ["Yes", "No", "Don't know"])
-    leave                     = st.selectbox("How easy to take mental health leave?", ["Very easy", "Somewhat easy", "Somewhat difficult", "Very difficult", "Don't know"])
+    sleep_duration    = st.selectbox("Sleep Duration", ["Less than 5 hours", "5-6 hours", "7-8 hours", "More than 8 hours"])
+    dietary_habits    = st.selectbox("Dietary Habits", ["Healthy", "Moderate", "Unhealthy"])
+    financial_stress  = st.selectbox("Financial Stress (1=Low, 5=High)", [1, 2, 3, 4, 5])
 with col6:
-    mental_health_consequence = st.selectbox("Negative consequences for discussing mental health?", ["No", "Yes", "Maybe"])
-    phys_health_consequence   = st.selectbox("Same for physical health?", ["No", "Yes", "Maybe"])
-    coworkers                 = st.selectbox("Comfortable discussing with coworkers?", ["Yes", "No", "Some of them"])
-    supervisor                = st.selectbox("Comfortable discussing with supervisor?", ["Yes", "No", "Some of them"])
-
-col7, col8 = st.columns(2)
-with col7:
-    mental_health_interview = st.selectbox("Bring up mental health in interview?", ["Yes", "No", "Maybe"])
-    phys_health_interview   = st.selectbox("Bring up physical health in interview?", ["Yes", "No", "Maybe"])
-with col8:
-    mental_vs_physical = st.selectbox("Employer takes mental health as seriously as physical?", ["Yes", "No", "Don't know"])
-    obs_consequence    = st.selectbox("Seen negative consequences for others?", ["No", "Yes"])
+    suicidal_thoughts        = st.selectbox("Have you ever had suicidal thoughts?", ["No", "Yes"])
+    family_history           = st.selectbox("Family History of Mental Illness?", ["No", "Yes"])
 
 st.divider()
 
-gender_map      = {"Male": 1, "Female": 0, "Other": 2}
-yes_no          = {"Yes": 1, "No": 0}
-yes_no_dk       = {"Yes": 2, "No": 1, "Don't know": 0}
-care_map        = {"Yes": 2, "No": 0, "Not sure": 1}
-interfere_map   = {"Never": 1, "Rarely": 2, "Sometimes": 3, "Often": 0}
-leave_map       = {"Very easy": 4, "Somewhat easy": 3, "Don't know": 0, "Somewhat difficult": 2, "Very difficult": 1}
-consequence_map = {"No": 0, "Yes": 2, "Maybe": 1}
-coworker_map    = {"Yes": 2, "No": 0, "Some of them": 1}
-employee_map    = {"1-5": 0, "6-25": 1, "26-100": 2, "100-500": 3, "500-1000": 4, "More than 1000": 5}
-mvp_map         = {"Yes": 2, "No": 0, "Don't know": 1}
+# Encoding maps
+gender_map    = {"Male": 1, "Female": 0}
+city_map      = {"Delhi": 0, "Mumbai": 1, "Bangalore": 2, "Chennai": 3,
+                 "Hyderabad": 4, "Kolkata": 5, "Pune": 6, "Other": 7}
+profession_map = {"Student": 2, "Working Professional": 3, "Other": 1}
+sleep_map     = {"Less than 5 hours": 1, "5-6 hours": 2, "7-8 hours": 3, "More than 8 hours": 4}
+diet_map      = {"Healthy": 1, "Moderate": 2, "Unhealthy": 3}
+yes_no        = {"Yes": 1, "No": 0}
+degree_map    = {"B.Tech": 0, "MBA": 1, "M.Tech": 2, "BCA": 3,
+                 "MCA": 4, "B.Sc": 5, "M.Sc": 6, "Other": 7}
 
 input_dict = {
-    "Age":                        age,
-    "Gender":                     gender_map[gender],
-    "self_employed":              yes_no[self_employed],
-    "family_history":             yes_no[family_history],
-    "work_interfere":             interfere_map[work_interfere],
-    "no_employees":               employee_map[no_employees],
-    "remote_work":                yes_no[remote_work],
-    "tech_company":               yes_no[tech_company],
-    "benefits":                   yes_no_dk[benefits],
-    "care_options":               care_map[care_options],
-    "wellness_program":           yes_no_dk[wellness_program],
-    "seek_help":                  yes_no_dk[seek_help],
-    "anonymity":                  yes_no_dk[anonymity],
-    "leave":                      leave_map[leave],
-    "mental_health_consequence":  consequence_map[mental_health_consequence],
-    "phys_health_consequence":    consequence_map[phys_health_consequence],
-    "coworkers":                  coworker_map[coworkers],
-    "supervisor":                 coworker_map[supervisor],
-    "mental_health_interview":    consequence_map[mental_health_interview],
-    "phys_health_interview":      consequence_map[phys_health_interview],
-    "mental_vs_physical":         mvp_map[mental_vs_physical],
-    "obs_consequence":            yes_no[obs_consequence],
+    "gender":                           gender_map[gender],
+    "age":                              age,
+    "city":                             city_map[city],
+    "profession":                       profession_map[profession],
+    "academic_pressure":                academic_pressure,
+    "work_pressure":                    work_pressure,
+    "cgpa":                             cgpa,
+    "study_satisfaction":               study_satisfaction,
+    "job_satisfaction":                 job_satisfaction,
+    "sleep_duration":                   sleep_map[sleep_duration],
+    "dietary_habits":                   diet_map[dietary_habits],
+    "degree":                           degree_map[degree],
+    "have_you_ever_had_suicidal_thoughts": yes_no[suicidal_thoughts],
+    "work_study_hours":                 work_study_hours,
+    "financial_stress":                 financial_stress,
+    "family_history_of_mental_illness": yes_no[family_history],
 }
 
 input_array = np.array([[input_dict[col] for col in model_columns]])
 
-if st.button("Predict", use_container_width=True):
+if st.button("Predict Depression Risk", use_container_width=True):
     probability = model.predict_proba(input_array)[0][1]
     risk        = round(probability * 100, 1)
     prediction  = 1 if probability >= 0.40 else 0
 
     st.divider()
     if prediction == 1:
-        st.error(f"Higher Risk Detected — {risk}% likelihood of needing treatment")
-        st.markdown("Based on these responses, this person may benefit from seeking mental health support. This is **not a diagnosis** — please consult a qualified professional.")
+        st.error(f"⚠️ Higher Depression Risk Detected — {risk}% likelihood")
+        st.markdown("Based on these responses, this student may be at risk of depression. Please consider speaking to a counselor or mental health professional. **This is not a clinical diagnosis.**")
     else:
-        st.success(f"Lower Risk — {risk}% likelihood of needing treatment")
-        st.markdown("Based on these responses, mental health risk appears lower. Staying aware and maintaining healthy habits is always a good idea.")
+        st.success(f"✅ Lower Depression Risk — {risk}% likelihood")
+        st.markdown("Based on these responses, depression risk appears lower. Keep maintaining healthy study habits, sleep, and social connections.")
 
     st.caption("This tool is for educational purposes only and does not replace professional medical advice.")
